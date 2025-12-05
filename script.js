@@ -10,6 +10,7 @@ let currentTheme = 'light';
 // SELETORES DO DOM (Constantes - Padrão UPPER_SNAKE_CASE)
 // ---
 const THEME_SWITCHER = document.getElementById('theme-switcher');
+const BODY = document.body
 const TRANSACTIONS_LIST = document.getElementById("transactions-list");
 const FILTER_INPUT = document.getElementById("filter-description")
 const TRANSACTIONS_FORM = document.getElementById("transaction-form");
@@ -245,6 +246,11 @@ const renderNewTransaction = (transaction, transactionsList) => {
  * Lida com o clique no botão de trocar o tema (Light/Dark).
  */
 THEME_SWITCHER.addEventListener('click', () => {
+    const currentTheme = BODY.getAttribute('data-theme');
+    
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    BODY.setAttribute('data-theme', newTheme);
 });
 
 /**
