@@ -11,7 +11,9 @@ let currentTheme = 'light';
 // ---
 const THEME_SWITCHER = document.getElementById('theme-switcher');
 const TRANSACTIONS_LIST = document.getElementById("transactions-list");
+const FILTER_INPUT = document.getElementById("filter-description")
 const TRANSACTIONS_FORM = document.getElementById("transaction-form");
+const SORT_SELECT = document.getElementById("sort-by")
 
 // ---
 // FUNÇÕES AUXILIARES 
@@ -43,6 +45,71 @@ function formatCurrency(amount) {
         currency: 'BRL'
     })
 }
+
+/**
+ * Normaliza uma string removendo acentos
+ * e converte para minúsculas para facilitar comparações não sensíveis.
+ * @param {string} str - A string de entrada.
+ * @returns {string} A string normalizada.
+ */
+const normalizeString = (str) => {
+    if (!str) return '';
+    
+    return str.toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+};
+
+/**
+ * Função para filtrar as transações.
+ * @param {string} searchTerm - O texto a ser procurado na descrição.
+ * @returns {Array<object>} Um novo array de transações que correspondem ao critério.
+ */
+const filterTransactions = (searchTerm) => {
+    const normalizedSearchTerm = normalizeString(searchTerm);
+
+    if (!searchTerm) {
+        return transactions;
+    }
+
+    return transactions.filter(transaction => {
+        const normalizedDescription = normalizeString(transaction.description)
+
+        return normalizedDescription.includes(normalizedSearchTerm);
+    });
+};
+
+/**
+ * Função para ordenar transações com base na opção selecionada.
+ * * Usa Array.prototype.sort() para reordenar a lista global 'transactions'.
+ * @param {string} criteria - O critério de ordenação (ex: 'date-newest', 'amount-highest').
+ * @returns {void}
+ */
+const sortTransactions = (criteria) => {
+  if (criteria === "default") {
+    transactions.sort((a, b) => a.id - b.id);
+    return;
+  }
+
+  switch (criteria) {
+    case "date-newest":
+      transactions.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      break;
+    case "date-oldest":
+      transactions.sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      break;
+    case "amount-highest":
+      transactions.sort((a, b) => b.amount - a.amount);
+      break;
+    case "amount-lowest":
+      transactions.sort((a, b) => a.amount - b.amount);
+      break;
+  }
+};
 
 /**
  * Exibe uma mensagem de erro abaixo do campo.
@@ -96,6 +163,9 @@ function generateID(){
  * @returns {void}
  */
 function addTransaction(description, amount, type, date){
+    if(type === 'expense'){
+        amount = 0 - amount
+    }
     const newTransaction = {
         id: generateID(),
         description: description,
@@ -146,10 +216,10 @@ function createTransactionElement(transaction) {
  * para cada transação.
  * * @returns {void}
  */
-function renderTransactions() {
+function renderTransactions(dataToRender = transactions) {
     TRANSACTIONS_LIST.innerHTML = ''
 
-    transactions.forEach(transaction => {
+    dataToRender.forEach(transaction => {
         const listItem = createTransactionElement(transaction)
         TRANSACTIONS_LIST.appendChild(listItem)
     })
@@ -177,11 +247,42 @@ const renderNewTransaction = (transaction, transactionsList) => {
 THEME_SWITCHER.addEventListener('click', () => {
 });
 
+/**
+ * Manipulador de evento para a digitação no campo de filtro.
+ * @param {Event} e - O objeto do evento de input.
+ * @returns {void}
+ */
+FILTER_INPUT.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.trim()
+
+    const filteredData = filterTransactions(searchTerm)
+
+    renderTransactions(filteredData)
+})
+
+/**
+ * Manipulador de evento para a mudança na seleção de ordenação.
+ * @param {Event} e - O objeto do evento de change.
+ * @returns {void}
+ */
+SORT_SELECT.addEventListener('change', (e) => {
+    const selectedCriteria = e.target.value
+
+    sortTransactions(selectedCriteria)
+
+    if (FILTER_INPUT.value.trim() !== "") {
+      const filteredData = filterTransactions(FILTER_INPUT.value.trim());
+      renderTransactions(filteredData);
+    } else {
+        renderTransactions()
+    }
+})
+
 /* Manipulador de evento para a submissão do formulário
  * @param {Event} e - O objeto do evento de submissão do formulário.
  * @returns {void}
  */
-function handleFormSubmit(e) {
+TRANSACTIONS_FORM.addEventListener('submit', (e) => {
   e.preventDefault();
 
   clearAllErrors();
@@ -245,14 +346,13 @@ function handleFormSubmit(e) {
   }
 
   console.log('Nova transação adicionada')
-}
+})
 
 /**
  * Função de inicialização da aplicação. A "main"
  */
 function init() {
     renderTransactions()
-    TRANSACTIONS_FORM.addEventListener('submit', handleFormSubmit)
 }
 
 // Inicia a aplicação

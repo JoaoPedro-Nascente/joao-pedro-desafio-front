@@ -14,6 +14,23 @@
 
     <main>
         <h1> Lista de Transações</h1>
+
+        <div class="list-control">
+            <label for="filter-description">Filtrar por Descrição</label>
+            <input type="text" id="filter-description" placeholder="Digite para buscar">
+        </div>
+
+        <div class="list-control">
+                    <label for="sort-by">Ordenar por:</label>
+                    <select id="sort-by">
+                        <option value="default">Padrão (Ordem de Inclusão)</option>
+                        <option value="date-newest">Data (Mais Recentes)</option>
+                        <option value="date-oldest">Data (Mais Antigas)</option>
+                        <option value="amount-highest">Valor (Maior)</option>
+                        <option value="amount-lowest">Valor (Menor)</option>
+                    </select>
+        </div>
+
         <ul id="transactions-list" class="transactions">
         </ul>
 
@@ -34,7 +51,7 @@
                 </div>
 
                 <div class="form-field">
-                    <label for="type">Tipo</label>
+                    <label>Tipo</label>
 
                     <input type="radio" id="income" name="type" value="income">
                     <label for="income">Entrada</label>
