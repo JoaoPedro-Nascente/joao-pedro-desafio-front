@@ -33,3 +33,11 @@ header {
 .transactions li.minus {
     border-right-color: #e74c3c; /* Vermelho */
 }
+
+.error-message {
+    color: #e74c3c;
+    font-size: 0.8em;
+    margin-top: 5px;
+    display: block;
+    min-height: 1.2em;
+}

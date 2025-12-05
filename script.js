@@ -10,6 +10,8 @@ let currentTheme = 'light';
 // SELETORES DO DOM (Constantes - Padrão UPPER_SNAKE_CASE)
 // ---
 const THEME_SWITCHER = document.getElementById('theme-switcher');
+const TRANSACTIONS_LIST = document.getElementById("transactions-list");
+const TRANSACTIONS_FORM = document.getElementById("transaction-form");
 
 // ---
 // FUNÇÕES AUXILIARES 
@@ -42,6 +44,128 @@ function formatCurrency(amount) {
     })
 }
 
+/**
+ * Exibe uma mensagem de erro abaixo do campo.
+ * @param {string} id - O ID do elemento span de erro (ex: 'error-description').
+ * @param {string} message - A mensagem de erro a ser exibida.
+ * @returns {void}
+ */
+function displayError(id, message){
+    const errorElement = document.getElementById(id)
+    if(errorElement) {
+        errorElement.textContent = message
+    }
+}
+
+/**
+ * Limpa a mensagem de erro abaixo do campo.
+ * @param {string} id - O ID do elemento span de erro (ex: 'error-description').
+ * @returns {void}
+ */
+const clearError = (id) => {
+    displayError(id, '');
+};
+
+/**
+ * Limpa todas as mensagens de erro do formulário.
+ * @returns {void}
+ */
+const clearAllErrors = () => {
+    clearError('error-description');
+    clearError('error-amount');
+    clearError('error-type');
+    clearError('error-date');
+};
+
+/**
+ * Gera um ID único simples para a nova transação.
+ * @returns {number} O próximo ID disponível.
+ */
+function generateID(){
+    //Encontra o maior id e adiciona 1
+    const maxId = transactions.reduce((max, t) => (t.id > max ? t.id : max), 0);
+    return maxId + 1;
+};
+
+/**
+ * Adiciona uma nova transação ao array de dados e força a re-renderização da lista.
+ * @param {string} description - Descrição da transação.
+ * @param {number} amount - Valor da transação (positivo).
+ * @param {string} type - Tipo da transação ('income' ou 'expense').
+ * @param {string} date - Data da transação (AAAA-MM-DD).
+ * @returns {void}
+ */
+function addTransaction(description, amount, type, date){
+    const newTransaction = {
+        id: generateID(),
+        description: description,
+        amount: amount,
+        type: type,
+        date: date
+    }
+
+    transactions.push(newTransaction)
+    renderNewTransaction(newTransaction, TRANSACTIONS_LIST)
+};
+
+/**
+ * Cria e retorna um elemento <li> HTML para uma transação.
+ * @param {object} transaction - O objeto da transação a ser renderizado.
+ * @returns {HTMLLIElement} O elemento <li> pronto para ser anexado ao DOM.
+ */
+function createTransactionElement(transaction) {
+   const signClass = transaction.type === "income" ? "plus" : "minus";
+
+   const typeText = transaction.type === "income" ? "Receita" : "Despesa";
+
+   const formattedDate = formatDate(transaction.date);
+   const formattedAmount = formatCurrency(transaction.amount);
+   const sign = transaction.type === "expense" ? "-" : "";
+
+   const listItem = document.createElement("li");
+
+   listItem.classList.add(signClass);
+
+   listItem.innerHTML = `
+        <div class="transaction-content">
+            <span class="description">${transaction.description}</span>
+            <span class="details">
+                Tipo: ${typeText} | Data: ${formattedDate} | ID: ${transaction.id}
+            </span>
+        </div>
+        <span class="amount-display">${sign}${formattedAmount}</span>
+    `;
+
+   return listItem;
+ };
+
+
+/**
+ * Renderiza a lista completa de transações na interface do usuário (DOM).
+ * * A função itera sobre o array 'transactions' e cria um novo elemento <li> 
+ * para cada transação.
+ * * @returns {void}
+ */
+function renderTransactions() {
+    TRANSACTIONS_LIST.innerHTML = ''
+
+    transactions.forEach(transaction => {
+        const listItem = createTransactionElement(transaction)
+        TRANSACTIONS_LIST.appendChild(listItem)
+    })
+}
+
+/**
+ * Renderiza apenas uma nova transação no final da lista, otimizando o DOM.
+ * @param {object} transaction - O objeto da transação recém-criada.
+ * @param {HTMLElement} transactionsList - O elemento <ul> ou <ol> onde o item será anexado.
+ * @returns {void}
+ */
+const renderNewTransaction = (transaction, transactionsList) => {
+    const listItem = createTransactionElement(transaction);
+    
+    TRANSACTIONS_LIST.appendChild(listItem);
+};
 
 // ---
 // MANIPULADORES DE EVENTOS
@@ -53,45 +177,82 @@ function formatCurrency(amount) {
 THEME_SWITCHER.addEventListener('click', () => {
 });
 
-/**
- * Renderiza a lista completa de transações na interface do usuário (DOM).
- * * A função itera sobre o array 'mockData' e cria um novo elemento <li> 
- * para cada transação.
- * @param {HTMLElement} transactionsList - O elemento de lista de transações
- * * @returns {void}
+/* Manipulador de evento para a submissão do formulário
+ * @param {Event} e - O objeto do evento de submissão do formulário.
+ * @returns {void}
  */
-function renderTransactions(transactionsList) {
-    mockData.forEach(transaction => {
-        const listItem = document.createElement('li')
+function handleFormSubmit(e) {
+  e.preventDefault();
 
-        const signClass = transaction.type === "income" ? "plus" : "minus";
-        listItem.classList.add(signClass)
+  clearAllErrors();
 
-        const typeText = transaction.type === 'income' ? 'Entrada' : 'Saída'
-        const sign = transaction.type === "expense" ? "-" : "";
-        const formattedDate = formatDate(transaction.date)
-        const formattedAmount = formatCurrency(transaction.amount)
+  const descriptionInput = document.getElementById("description");
+  const amountInput = document.getElementById("amount");
+  const dateInput = document.getElementById("date");
+  const typeInput = document.querySelector('input[name="type"]:checked');
 
-        listItem.textContent = `
-            ID: ${transaction.id},
-            Valor: ${sign}${formattedAmount},
-            Tipo: ${typeText},
-            Data: ${formattedDate}
-        `;
+  const description = descriptionInput.value.trim();
+  const amountString = amountInput.value.trim();
+  const date = dateInput.value;
+  const type = typeInput ? typeInput.value : null;
 
-        transactionsList.appendChild(listItem)
-    })
+  let hasErrors = false;
+
+  if (description === "") {
+    displayError("error-description", "A descrição não pode estar vazia.");
+    hasErrors = true;
+  }
+
+  if (!type) {
+    displayError("error-type", "Selecione o tipo (Receita ou Despesa).");
+    hasErrors = true;
+  }
+
+  const amount = parseFloat(amountString);
+  if (isNaN(amount) || amount <= 0) {
+    displayError(
+      "error-amount",
+      "O valor deve ser um número positivo maior que zero."
+    );
+    hasErrors = true;
+  }
+
+  if (date === "") {
+    displayError("error-date", "A data da transação precisa ser preenchida.");
+    hasErrors = true;
+  }
+
+  if(hasErrors){
+    return
+  }
+
+  console.log("Dados Coletados:");
+  console.log(`Descrição: ${description}`);
+  console.log(`Valor: ${amount} (string)`);
+  console.log(`Tipo: ${type}`);
+  console.log(`Data: ${date}`);
+
+  const finalAmount = parseFloat(amountString)
+
+  addTransaction(description, finalAmount, type, date)
+
+  descriptionInput.value = "";
+  amountInput.value = "";
+  dateInput.value = "";
+
+  if (typeInput) {
+    typeInput.checked = false;
+  }
+
+  console.log('Nova transação adicionada')
 }
 
 /**
  * Função de inicialização da aplicação. A "main"
  */
 function init() {
-    let transactions = [...mockData]
-
-    const transactionsList = document.getElementById('transactions-list')
-
-    renderTransactions(transactionsList)
+    renderTransactions()
+    TRANSACTIONS_FORM.addEventListener('submit', handleFormSubmit)
 }
 
 // Inicia a aplicação
