@@ -1,3 +1,66 @@
+.main-content {
+    width: 90%;
+    max-width: 450px; /* Limita a largura para mobile para melhor leitura */
+    margin: 20px auto;
+}
+
+/* O wrapper não tem efeito no mobile (continua coluna única) */
+.columns-wrapper {
+    display: block; 
+}
+
+/* Estilos para os controles de filtro/ordenação */
+.list-controls-group {
+    /* No mobile, eles podem ficar empilhados (padrão) ou usar Flex para alinhamento horizontal */
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+    margin-bottom: 20px;
+}
+
+.new-transaction, .history-column {
+    margin-bottom: 30px;
+    padding: 20px;
+    /* ... (Adicione estilos de fundo/shadow aqui, se necessário) ... */
+}
+
+/* --- 💡 MEDIA QUERY: LAYOUT DE DUAS COLUNAS (DESKTOP) --- */
+
+@media (min-width: 768px) {
+    
+    .main-content {
+        max-width: 1000px; /* Aumenta a largura máxima para desktop */
+    }
+
+    /* 💡 HABILITA O FLEXBOX PARA O LAYOUT DE DUAS COLUNAS */
+    .columns-wrapper {
+        display: flex; 
+        gap: 30px; 
+        align-items: flex-start; /* Alinha o topo das duas seções */
+    }
+
+    /* Coluna 1: Formulário (tamanho fixo razoável) */
+    .new-transaction {
+        flex: 0 0 35%; /* Ocupa 35% do espaço */
+        max-width: 350px;
+    }
+    
+    /* Coluna 2: Histórico (ocupa o restante do espaço) */
+    .history-column {
+        flex: 1; /* Ocupa o espaço restante */
+    }
+    
+    /* Estilos dos controles no desktop (podem ficar lado a lado) */
+    .list-controls-group {
+        flex-direction: row; 
+        justify-content: space-between;
+    }
+    
+    .list-control {
+        min-width: 200px;
+    }
+}
+
 :root {
     --background-color: #f4f7f6;
     --primary-color: #333;
@@ -42,6 +105,10 @@ header {
 
 .transaction-form input {
     border: 1px solid var(--input-border);
+}
+
+.transactions {
+    padding-left: 0;
 }
 
 .transactions li {
