@@ -1,76 +1,6 @@
-.main-content {
-    width: 90%;
-    max-width: 450px;
-    margin: 20px auto;
-}
-
-.amount-display {
-    margin-left: 0%;
-    min-width: fit-content;
-}
-
-#balance {
-    font-size: 1em;
-    font-weight: bold;
-    display: block;
-    margin-top: 10px;
-}
-
-.positive-balance {
-    color: var(--border-color-plus); 
-}
-
-.negative-balance {
-    color: var(--border-color-minus); 
-}
-
-.columns-wrapper {
-    display: block; 
-}
-
-.list-controls-group {
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-    margin-bottom: 20px;
-}
-
-.new-transaction, .history-column {
-    margin-bottom: 30px;
-    padding: 20px;
-}
-
-@media (min-width: 768px) {
-    
-    .main-content {
-        max-width: 1000px;
-    }
-
-    .columns-wrapper {
-        display: flex; 
-        gap: 30px; 
-        align-items: flex-start;
-    }
-
-    .new-transaction {
-        flex: 0 0 35%;
-        max-width: 350px;
-    }
-    
-    .transactions-column {
-        flex: 1;
-        width: 100%;
-    }
-    
-    .list-controls-group {
-        flex-direction: row; 
-        justify-content: space-between;
-    }
-    
-    .list-control {
-        min-width: 200px;
-    }
-}
+/**************************************/
+/* ROOT E VARIÁVEIS CSS (TEMAS)    */
+/**************************************/
 
 :root {
     --background-color: #f4f7f6;
@@ -84,7 +14,7 @@
 }
 
 body[data-theme="dark"] {
---background-color: #1a1a2e;
+    --background-color: #1a1a2e;
     --text-color: #f0f0f0;
     --card-background: #2c2c44;
     --shadow-color: rgba(0, 0, 0, 0.4);
@@ -92,6 +22,10 @@ body[data-theme="dark"] {
     --border-color-minus: #ff726f;
     --input-border: #444;
 }
+
+/**************************************/
+/* (ESTILOS GLOBAIS E HEADER) */
+/**************************************/
 
 body {
     font-family: Arial, sans-serif;
@@ -109,18 +43,70 @@ header {
     text-align: center;
 }
 
-.summary, .new-transaction, .transactions-list, .transactions li {
+/**************************************/
+/* LAYOUT E SEÇÕES GERAIS          */
+/**************************************/
+
+.main-content {
+    width: 90%;
+    max-width: 450px;
+    margin: 20px auto;
+}
+
+.columns-wrapper {
+    display: block; 
+}
+
+/* Agrupamento de elementos que usam o estilo de 'cartão' */
+.summary, .new-transaction, .history-column, .transactions-list, .transactions li {
     background: var(--card-background);
     box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.new-transaction, .history-column {
+    margin-bottom: 30px;
+    padding: 20px;
 }
 
 .summary-balance {
     padding: 20px;
 }
 
+/**************************************/
+/* COMPONENTES E INPUTS            */
+/**************************************/
+
+/* --- Saldo --- */
+
+#balance {
+    font-size: 1em;
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
+
+.positive-balance {
+    color: var(--border-color-plus); 
+}
+
+.negative-balance {
+    color: var(--border-color-minus); 
+}
+
+/* --- Controles e Formulário --- */
+
+.list-controls-group {
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+    margin-bottom: 20px;
+}
+
 .transaction-form input {
     border: 1px solid var(--input-border);
 }
+
+/* --- Lista de Transações (UL e LI) --- */
 
 .transactions {
     padding-left: 0;
@@ -133,16 +119,32 @@ header {
     border-radius: 4px;
     display: flex;
     justify-content: space-between;
-    align-items: center;    
+    align-items: center; 
     border-right: 5px solid; 
     position: relative;
     padding-right: 40px;
 }
 
+/* 💡 CONSOLIDAÇÃO DE BORDAS */
+.transactions li.plus {
+    border-right-color: var(--border-color-plus); 
+}
+
+.transactions li.minus {
+    border-right-color: var(--border-color-minus); 
+}
+
+/* --- Botão Excluir e Valor --- */
+
 .control-group {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.amount-display {
+    margin-left: 0%;
+    min-width: fit-content;
 }
 
 .delete-btn {
@@ -163,13 +165,7 @@ header {
     opacity: 1;
 }
 
-.transactions li.plus {
-    border-right-color: #2ecc71;
-}
-
-.transactions li.minus {
-    border-right-color: #e74c3c;
-}
+/* --- Utilidades --- */
 
 .error-message {
     color: #e74c3c;
@@ -178,6 +174,46 @@ header {
     display: block;
     min-height: 1.2em;
 }
+
+/**************************************/
+/* 5. MEDIA QUERIES E RESPONSIVIDADE  */
+/**************************************/
+
+@media (min-width: 768px) {
+    
+    .main-content {
+        max-width: 1000px;
+    }
+
+    .columns-wrapper {
+        display: flex; 
+        gap: 30px; 
+        align-items: flex-start;
+    }
+
+    .new-transaction {
+        flex: 0 0 35%;
+        max-width: 350px;
+    }
+    
+    .transactions-column { 
+        flex: 1;
+        width: 100%;
+    }
+    
+    .list-controls-group {
+        flex-direction: row; 
+        justify-content: space-between;
+    }
+    
+    .list-control {
+        min-width: 200px;
+    }
+}
+
+/**************************************/
+/* 6. ESTILOS DO SWITCH (THEME)       */
+/**************************************/
 
 .theme-switcher {
     display: inline-block;
@@ -191,42 +227,4 @@ header {
     height: 0;
     opacity: 0;
     width: 0;
-}
-
-.slider {
-    background-color: #ccc;
-    bottom: 0;
-    cursor: pointer;
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    transition: 0.4s;
-}
-
-.slider:before {
-    background-color: #fff;
-    bottom: 4px;
-    content: "";
-    height: 26px;
-    left: 4px;
-    position: absolute;
-    transition: 0.4s;
-    width: 26px;
-}
-
-input:checked + .slider {
-    background-color: var(--primary-color);
-}
-
-input:checked + .slider:before {
-    transform: translateX(26px);
-}
-
-.slider.round {
-    border-radius: 34px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
 }
