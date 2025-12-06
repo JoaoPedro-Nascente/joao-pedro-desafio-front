@@ -1,128 +1,80 @@
-# Desafio de Estágio Frontend - IUPI
+## 📄 README: Controle Financeiro Pessoal
 
-Olá, candidato! Este desafio foi criado para avaliarmos seus conhecimentos fundamentais em HTML, CSS moderno e JavaScript puro.
+Este é um projeto de Controle Financeiro Pessoal desenvolvido em **JavaScript Puro**, HTML e CSS. O objetivo é fornecer uma aplicação web simples, rápida e responsiva para gerenciar receitas e despesas, com recursos essenciais como persistência de dados e filtros dinâmicos.
 
-**Atenção:** O uso de frameworks (Vue, React, Angular) ou bibliotecas (jQuery, Bootstrap) **não é permitido**. Queremos ver seu conhecimento dos fundamentos da web.
+-----
 
-## 🎯 O Desafio
+## 🚀 Funcionalidades Principais
 
-Você deve construir uma página de "Controle de Despesas". A página terá um formulário para adicionar transações e uma lista que exibe as transações existentes.
+  * **Registro de Transações:** Adiciona novas transações (Receita/Despesa) com descrição, valor e data.
+  * **Saldo Total Dinâmico:** Calcula e exibe o saldo atualizado em tempo real, com cores indicando se o saldo é positivo (verde) ou negativo (vermelho).
+  * **Exclusão de Transações:** Permite a remoção de itens da lista.
+  * **Persistência de Dados:** Salva todas as transações e a preferência de tema no **`localStorage`** do navegador.
+  * **Filtros Dinâmicos:** Filtra a lista de transações por descrição em tempo real, ignorando acentos (não sensível a diacríticos).
+  * **Ordenação:** Ordena a lista por data (mais recente/mais antiga) e valor (maior/menor).
+  * **Modo Noturno (Dark Mode):** Alterna entre tema claro e escuro utilizando variáveis CSS e um botão *switch*.
+  * **Responsividade:** Layout adaptável para dispositivos móveis (coluna única) e desktop (duas colunas: formulário e histórico lado a lado).
 
-Você receberá um arquivo de mock (`/mock/transactions.js`) com dados iniciais.
+-----
 
-### Layout (Responsividade é Chave)
+## 🛠️ Tecnologias Utilizadas
 
-* **Desktop (telas > 768px):** Layout em **duas colunas** (formulário de um lado, lista do outro).
-* **Mobile (telas < 768px):** Layout em **coluna única** (formulário em cima, lista embaixo).
+  * **HTML5**
+  * **CSS3** (Incluindo **Variáveis CSS** para temas e **Media Queries** para responsividade).
+  * **JavaScript ES6+** (Vanilla JS)
+      * **Modularização:** Uso do sistema `import`/`export` em arquivos separados.
+      * **Manipulação de DOM** e **Delegação de Eventos**.
 
----
+-----
 
-## ✅ Requisitos Funcionais
+## 📁 Estrutura do Projeto
 
-### 1. Renderização e Formatação
-* Ao carregar, o JavaScript deve ler os dados do `/mock/transactions.js` e renderizar a lista.
-* Para cada transação no mock, um item deve ser renderizado na lista.
+O projeto segue uma estrutura modular para separar responsabilidades:
 
-Os dados do mock devem ser formatados para exibição:
-* **Valor (`amount`):** Deve ser formatado como moeda brasileira (ex: `R$ 1.500,00` ou `-R$ 250,50`).
-* **Data (`date`):** Deve ser formatada de `YYYY-MM-DD` para `DD/MM/YYYY`.
-* **Tipo (`type`):** A lista deve indicar visualmente se a transação é `income` (entrada) ou `expense` (saída). (Ex: uma borda verde para entrada, vermelha para saída).
-  
-### 2. Formulário e Validação
-* O formulário deve conter campos para "Descrição", "Valor", "Tipo" (Entrada/Saída) e "Data".
-* Ao submeter, a página **não deve** recarregar.
-* **Validação (Obrigatório):**
-    * Nenhum campo pode estar vazio.
-    * O valor não pode ser zero ou negativo.
-    * Mensagens de erro claras devem aparecer abaixo dos campos inválidos.
+```
+controle-financeiro/
+├── index.html                  # Estrutura principal da aplicação (view)
+├── style.css                   # Estilos, variáveis de tema e media queries
+├── script.js                   # Módulo principal (lógica, listeners e inicialização)
+├── mock/
+│   └── transactions.js         # Dados de exemplo (mockData)
+└── package.json (opcional)     # Metadados do projeto
+```
 
-### 3. Filtro e Ordenação
-* **Filtro por Descrição:** Um campo de texto (`<input type="search">`) que filtra pelo campo de descrição em tempo real.
-* **Ordenação:** Um `<select>` que permite ordenar a lista por:
-    * Data (Mais Recentes / Antigas)
-    * Valor (Maior / Menor)
+-----
 
-### 4. Tema (Light/Dark)
-* Adicione um botão "switch" que alterna o tema da página entre **Light Mode** e **Dark Mode**.
-* Você **deve** usar **Variáveis CSS** (CSS Custom Properties).
+## ⚙️ Detalhes da Implementação (Lógica JS)
 
----
+### 1\. Inicialização e Estado Global
 
-## 💎 Requisitos de Qualidade de Código
+A função **`init()`** carrega a aplicação, priorizando os dados e temas salvos no `localStorage` sobre os dados de exemplo.
 
-Este desafio também avalia *como* você escreve e organiza seu código. Um código limpo é tão importante quanto um código que funciona.
+  * O estado de todas as transações é mantido na variável global (de módulo) **`let transactions`**.
 
-### 1. Padrões de Nomenclatura (Padrão de Variáveis)
-Siga as convenções da comunidade para manter o código legível:
+### 2\. Funções de Renderização e Câmbio
 
-* **JavaScript:**
-    * `camelCase` para variáveis e funções (ex: `let myTransaction`, `function renderList()`).
-    * `UPPER_SNAKE_CASE` para constantes *globais*, especialmente seletores do DOM (ex: `const LIST_ELEMENT = ...`).
-* **CSS:**
-    * `kebab-case` para classes e IDs (ex: `.transaction-list`, `#theme-switcher`).
+  * **`createTransactionElement(transaction)`:** Cria o `<li>` dinamicamente, injetando o HTML (descrição, valor, data) e o botão de exclusão com o atributo `data-id`.
+  * **`renderTransactions()`:** Função principal que limpa o `TRANSACTIONS_LIST` e re-renderiza toda a lista (usada para ordenação e exclusão).
+  * **`renderNewTransaction()`:** Função otimizada que apenas anexa o novo `<li>` ao DOM (usada para adicionar novas transações).
+  * **`updateBalance()`:** Calcula o saldo usando `reduce()` no array de transações e aplica as classes **`.positive-balance`** ou **`.negative-balance`** ao elemento `#balance`.
 
-### 2. Documentação de Código (Comentários)
-Queremos ver como você explica seu próprio código.
+### 3\. Persistência de Dados
 
-* **JSDoc para Funções:** Use o formato JSDoc para documentar suas funções principais (como as de formatação, renderização e ordenação).
-* **Exemplo:**
-    ```javascript
-    /**
-     * Formata uma string de data (YYYY-MM-DD) para o padrão brasileiro (DD/MM/YYYY).
-     * @param {string} dateString - A data no formato ISO.
-     * @returns {string} A data formatada.
-     */
-    function formatDate(dateString) {
-        // ...
-    }
-    ```
-* **Comentários de Lógica:** Se você escrever um bloco de código complexo, adicione um comentário simples (`// ...`) explicando *o porquê* da sua decisão.
+As transações e o tema são salvos usando `localStorage`:
 
----
+  * **`saveTransactions()` e `loadTransactions()`:** Salva/carrega o array `transactions` como uma *string* JSON. Chamadas após `addTransaction` e `deleteTransaction`.
+  * **`saveTheme()` e `loadTheme()`:** Salva/carrega o atributo **`data-theme`** do `<body>`. Chamadas no `init` e na troca de tema.
 
-## ⭐ Requisitos Bônus (Opcional)
-* **Saldo Total:** Calcular e exibir o "Saldo Total" (Entradas - Saídas).
-* **Botão Excluir:** Adicionar um "X" em cada item da lista para removê-lo.
-* **Persistência:** Usar `localStorage` para salvar o tema e as transações.
+### 4\. Controles Dinâmicos
 
----
+  * **Filtro:** A função **`filterTransactions()`** utiliza **`normalizeString()`** para remover acentos e converter para minúsculas, garantindo uma busca fluida e insensível à capitalização/acentuação. O evento **`input`** do campo de filtro dispara a re-renderização em tempo real.
+  * **Deleção:** A lista usa **delegação de eventos** (o *listener* é anexado ao `TRANSACTIONS_LIST` e verifica se o alvo é o `.delete-btn`). Isso garante que *listeners* funcionem em itens criados dinamicamente.
+  * **Ordenação:** A função **`sortTransactions()`** usa o método nativo `Array.prototype.sort()` do JavaScript para reordenar o array `transactions` globalmente antes de chamar `renderTransactions()`.
 
-## 📚 Materiais de Aprendizado
-* **Introdução ao HTML**
-    * [MDN - Introdução ao HTML](https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/Structuring_content)
-* **Intrudução ao CSS**
-    * [MDN - Introdução ao CSS](https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/Styling_basics)
-* **Instrodução ao JavaScript**
-    * [MDN - JavaScript](https://developer.mozilla.org/pt-BR/docs/conflicting/Learn_web_development/Core/Scripting_785964b4c0711553d2bf3130baef052c6d78a03b4ce249eeb9d1ce2be1e3c308)  
-* **Playlists do Youtube**
-    * [Curso de HTML Completo](https://youtube.com/playlist?list=PL2Fdisxwzt_cajoGVWTx44wM6Ht09QJ3A&si=82wxtbyk9T_f4uHU)
-    * [Curso de CSS Completo](https://youtube.com/playlist?list=PL2Fdisxwzt_fqPM6MOwi2zXsbfV1j11kc&si=ku6ZczRpNYLaEx2E)
-    * [Curso de JavaScript Completo](https://youtube.com/playlist?list=PL2Fdisxwzt_eMWior34VtbfX8xsCF7qMd&si=K4DSDoqJjG9ISuB0)
-* **Aprenda muito rápido**
-    * [HTML em 5 minutos](https://www.youtube.com/watch?v=Bi56rN6gmbA)
-    * [CSS em 15 minutos](https://youtu.be/BKATrAAWrRo?si=rDaepDumIeHHhATw)
-    * [JavaScript em 10 minutos](https://youtu.be/eVzW7ePg_hQ?si=AjY2fJ5CJwwaUJGh)
-* **Tema (Light/Dark):**
-    * [MDN - Usando Variáveis CSS (Custom Properties)](https://developer.mozilla.org/pt-BR/docs/Web/CSS/Using_CSS_custom_properties)
-* **Ordenação (JS):**
-    * [MDN - Array.prototype.sort()](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
-* **Filtro (JS):**
-    * [MDN - Array.prototype.filter()](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
-* **Documentação (JS):**
-    * [JSDoc - Primeiros Passos (em inglês)](https://jsdoc.app/about-getting-started.html) (O básico de `@param` e `@returns` é o suficiente).
-* **Formatação (JS):**
-    * [MDN - Intl.NumberFormat (Formatar Moeda)](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat)
-    * [MDN - Date.toLocaleDateString (Formatar Data)](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString)
-* **Validação (HTML/JS):**
-    * [MDN - Validação de Formulário Cliente-Side](https://developer.mozilla.org/pt-BR/docs/Learn/Forms/Form_validation)
-* **Persistência (Bônus):**
-    * [MDN - Window.localStorage](https://developer.mozilla.org/pt-BR/docs/Web/API/Window/localStorage)
+-----
 
-## 🚚 Como Entregar
-1.  Faça um **Fork** deste repositório.
-2.  Crie uma nova branch no seu fork (ex: `meu-nome-desafio`).
-3.  Faça seus commits.
-4.  Ao finalizar, abra um **Pull Request (PR)** do seu fork de volta para este repositório original.
-5.  No corpo do PR, deixe comentários sobre suas decisões, dificuldades e o que você mais gostou.
+## ▶️ Como Executar o Projeto
 
-Boa sorte!
+1.  **Clone o Repositório** (ou baixe os arquivos).
+2.  Abra o arquivo **`index.html`** no seu navegador web.
+3.  Como alternativa, use uma extensão de servidor local (como "Live Server" no VS Code) para evitar problemas de CORS no carregamento de módulos.
