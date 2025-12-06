@@ -11,10 +11,11 @@ let currentTheme = 'light';
 // ---
 const THEME_SWITCHER = document.getElementById('theme-switcher');
 const BODY = document.body
-const TRANSACTIONS_LIST = document.getElementById("transactions-list");
-const FILTER_INPUT = document.getElementById("filter-description")
-const TRANSACTIONS_FORM = document.getElementById("transaction-form");
-const SORT_SELECT = document.getElementById("sort-by")
+const TRANSACTIONS_LIST = document.getElementById('transactions-list')
+const FILTER_INPUT = document.getElementById('filter-description')
+const TRANSACTIONS_FORM = document.getElementById('transaction-form')
+const SORT_SELECT = document.getElementById('sort-by')
+const BALANCE_ELEMENT = document.getElementById('balance')
 
 // ---
 // FUNÇÕES AUXILIARES 
@@ -59,6 +60,37 @@ const normalizeString = (str) => {
     return str.toLowerCase()
               .normalize("NFD")
               .replace(/[\u0300-\u036f]/g, "");
+};
+
+/**
+ * Calcula o saldo total da aplicação (Entradas - Saídas).
+ * @returns {number} O valor numérico do saldo.
+ */
+function calculateBalance() {
+  const total = transactions.reduce((accumulator, transaction) => {
+    console.log(transaction.type === "income" ? transaction.amount : -1*transaction.amount)
+    const amount =
+      transaction.type === "income" ? transaction.amount : -1*transaction.amount;
+    return accumulator + amount;
+  }, 0);
+
+  return total;
+};
+
+/**
+ * Atualiza a exibição do saldo total no DOM.
+ * @returns {void}
+ */
+const updateBalance = () => {
+    const total = calculateBalance();
+    
+    const formattedTotal = formatCurrency(total);
+    
+    const signPrefix = Math.sign(total) === -1 ? '-' : '';
+    
+    BALANCE_ELEMENT.textContent = `${signPrefix} ${formattedTotal}`;
+
+    BALANCE_ELEMENT.className = total >= 0 ? 'positive-balance' : 'negative-balance';
 };
 
 /**
@@ -164,9 +196,6 @@ function generateID(){
  * @returns {void}
  */
 function addTransaction(description, amount, type, date){
-    if(type === 'expense'){
-        amount = 0 - amount
-    }
     const newTransaction = {
         id: generateID(),
         description: description,
@@ -177,6 +206,8 @@ function addTransaction(description, amount, type, date){
 
     transactions.push(newTransaction)
     renderNewTransaction(newTransaction, TRANSACTIONS_LIST)
+
+    updateBalance()
 };
 
 /**
@@ -201,7 +232,7 @@ function createTransactionElement(transaction) {
         <div class="transaction-content">
             <span class="description">${transaction.description}</span>
             <span class="details">
-                Tipo: ${typeText} | Data: ${formattedDate} | ID: ${transaction.id}
+                <br> ID: ${transaction.id} <br >Tipo: ${typeText} <br> Data: ${formattedDate}
             </span>
         </div>
         <span class="amount-display">${sign}${formattedAmount}</span>
@@ -359,6 +390,8 @@ TRANSACTIONS_FORM.addEventListener('submit', (e) => {
  */
 function init() {
     renderTransactions()
+
+    updateBalance()
 }
 
 // Inicia a aplicação
