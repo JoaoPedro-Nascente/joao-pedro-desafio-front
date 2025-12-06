@@ -210,6 +210,21 @@ function addTransaction(description, amount, type, date){
     updateBalance()
 };
 
+
+/**
+ * Remove uma transação do array global e re-renderiza a lista e o saldo.
+ * @param {number} id - O ID da transação a ser excluída.
+ * @returns {void}
+ */
+const deleteTransaction = (id) => {
+    transactions = transactions.filter(transaction => transaction.id !== id);
+    
+    renderTransactions(); 
+    
+    updateBalance();
+};
+
+
 /**
  * Cria e retorna um elemento <li> HTML para uma transação.
  * @param {object} transaction - O objeto da transação a ser renderizado.
@@ -235,7 +250,11 @@ function createTransactionElement(transaction) {
                 <br> ID: ${transaction.id} <br >Tipo: ${typeText} <br> Data: ${formattedDate}
             </span>
         </div>
-        <span class="amount-display">${sign}${formattedAmount}</span>
+        
+        <div class="control-group">
+            <span class="amount-display">${sign}${formattedAmount}</span>
+            <button class="delete-btn" data-id="${transaction.id}">X</button>
+        </div>
     `;
 
    return listItem;
@@ -384,6 +403,26 @@ TRANSACTIONS_FORM.addEventListener('submit', (e) => {
 
   console.log('Nova transação adicionada')
 })
+
+
+/**
+ * Manipulador de clique para deletar transação
+ * @param {Event} e - O objeto do evento de clique.
+ * @returns {void}
+ */
+TRANSACTIONS_LIST.addEventListener('click', (e) => {
+    const deleteButton = e.target.closest(".delete-btn");
+
+    if (deleteButton) {
+    const confirmed = confirm("Tem certeza que deseja excluir esta transação?");
+
+    if (confirmed) {
+        const idToDelete = parseInt(deleteButton.getAttribute("data-id"));
+        deleteTransaction(idToDelete);
+    }
+    }
+})
+
 
 /**
  * Função de inicialização da aplicação. A "main"
