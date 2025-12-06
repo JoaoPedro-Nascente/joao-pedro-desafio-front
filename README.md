@@ -1,4 +1,4 @@
-## 📄 README: Controle Financeiro Pessoal
+## Controle Financeiro Pessoal
 
 Este é um projeto de Controle Financeiro Pessoal desenvolvido em **JavaScript Puro**, HTML e CSS. O objetivo é fornecer uma aplicação web simples, rápida e responsiva para gerenciar receitas e despesas, com recursos essenciais como persistência de dados e filtros dinâmicos.
 
