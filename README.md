@@ -49,4 +49,3 @@ O repositório do backend está em: [https://github.com/JoaoPedro-Nascente/joao-
 1.  **Baixe os Arquivos:** Clone o repositório ou baixe os arquivos diretamente.
 2.  **Abra:** Abra o arquivo **`index.html`** no seu navegador web.
 3.  **Lembre-se:** Siga as instruções acima para **iniciar o backend** antes de tentar fazer login.
-```
