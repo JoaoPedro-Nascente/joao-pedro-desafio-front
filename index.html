@@ -10,15 +10,33 @@
     <header class="header">
         <h1>Meu Controle Financeiro</h1>
         <button id="theme-switcher">Mudar Tema</button>
+        <button id="logout-button" class="btn">Sair</button>
     </header>
 
     <main class="main-content">
         <section class="summary">
             <h2 class="summary-balance">Saldo Atual: <span id="balance" class="summary-balance">R$ 0,00</span></h2>
         </section>
+            <section id="login-screen" class="screen active">
+                <div class="login-container">
+                    <h2>Acessar Controle Financeiro</h2>
+                    <form id="login-form">
+                        <div class="form-field">
+                            <label for="login-username">Usuário</label>
+                            <input type="text" id="login-username" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="login-password">Senha</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit" class="btn">Entrar</button>
+                        <span id="login-error" class="error-message"></span>
+                    </form>
+                </div>
+            </section>
 
-        <div class="columns-wrapper">
-                        <section class="new-transaction">
+        <div class="columns-wrapper hidden" id="main-app">
+            <section class="new-transaction">
                 <h2>Adicionar Nova Transação</h2>
 
                 <form id="transaction-form">

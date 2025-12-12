@@ -7,8 +7,11 @@ let transactions = [...mockData];
 let currentTheme = "light";
 
 // ---
-// VARIÁVEIS DE CHAVE E SELETORES DO DOM
+// ESTADO
 // ---
+let API_TOKEN = null;
+const BASE_URL = "http://127.0.0.1:8000/";
+const TOKEN_OBTAIN_URL = "http://127.0.0.1:8000/auth/token/";
 
 // SELETORES DO DOM (Constantes - Padrão UPPER_SNAKE_CASE)
 const THEME_SWITCHER = document.getElementById("theme-switcher");
@@ -18,6 +21,12 @@ const FILTER_INPUT = document.getElementById("filter-description");
 const TRANSACTIONS_FORM = document.getElementById("transaction-form");
 const SORT_SELECT = document.getElementById("sort-by");
 const BALANCE_ELEMENT = document.getElementById("balance");
+
+const LOGIN_SCREEN = document.getElementById("login-screen");
+const MAIN_APP = document.getElementById("main-app");
+const LOGIN_FORM = document.getElementById("login-form");
+const LOGIN_ERROR_ELEMENT = document.getElementById("login-error");
+const LOGOUT_BUTTON = document.getElementById("logout-button");
 
 // Variáveis de Chave
 const TRANSACTIONS_STORAGE_KEY = "control_transactions";
@@ -110,24 +119,84 @@ const normalizeString = (str) => {
 };
 
 /**
- * Calcula o saldo total da aplicação (Entradas - Saídas).
- * @returns {number} O valor numérico do saldo.
+ * Gera os cabeçalhos de autenticação para as requisições protegidas.
+ * Inclui o Content-Type (para enviar JSON) e o Token JWT.
+ * @returns {object} Cabeçalhos HTTP
  */
-function calculateBalance() {
-  const total = transactions.reduce((accumulator, transaction) => {
-    console.log(
-      transaction.type === "income"
-        ? transaction.amount
-        : -1 * transaction.amount
-    );
-    const amount =
-      transaction.type === "income"
-        ? transaction.amount
-        : -1 * transaction.amount;
-    return accumulator + amount;
-  }, 0);
+function getAuthHeaders() {
+    if (!API_TOKEN) {
+        console.error("Token de API ausente. Requer autenticação.");
+        return {
+            'Content-Type': 'application/json'
+        };
+    }
+    
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_TOKEN}`, 
+    };
+}
 
-  return total;
+/**
+ * Busca a lista de transações na API, armazena no estado global e renderiza.
+ * @returns {void}
+ */
+async function fetchTransactions() {
+    if (!API_TOKEN) return;
+
+    try {
+        const response = await fetch(`${BASE_URL}transactions/`, {
+            method: 'GET',
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error(`Falha ao carregar transações: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        transactions = data.results || data;
+
+        renderTransactions(); 
+    } catch (error) {
+        console.error("Error loading transactions:", error);
+        TRANSACTIONS_LIST.innerHTML = "<li>Falha ao carregar dados da API.</li>";
+    }
+}
+
+/**
+ * Busca o resumo do saldo na API e atualiza o DOM.
+ * @returns {void}
+ */
+async function fetchSummary() {
+  if (!API_TOKEN) return;
+
+  try {
+    const response = await fetch(`${BASE_URL}/transactions/summary/`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`Falha ao obter resumo: ${response.status}`);
+    }
+
+    const data = await response.json();
+        
+    const netBalance = parseFloat(data.net_balance) || 0;
+
+    console.log("Saldo recebido da API (float):", netBalance);
+
+    const formattedTotal = formatCurrency(netBalance);
+    const signPrefix = Math.sign(netBalance) === -1 ? "-" : "";
+
+    BALANCE_ELEMENT.textContent = `${signPrefix} ${formattedTotal}`;
+    BALANCE_ELEMENT.className = netBalance >= 0 ? "positive-balance" : "negative-balance";
+
+  } catch (error) {
+      console.error("Erro ao carregar resumo:", error);
+  }
 }
 
 /**
@@ -135,17 +204,69 @@ function calculateBalance() {
  * @returns {void}
  */
 const updateBalance = () => {
-  const total = calculateBalance();
-
-  const formattedTotal = formatCurrency(total);
-
-  const signPrefix = Math.sign(total) === -1 ? "-" : "";
-
-  BALANCE_ELEMENT.textContent = `${signPrefix} ${formattedTotal}`;
-
-  BALANCE_ELEMENT.className =
-    total >= 0 ? "positive-balance" : "negative-balance";
+  return fetchSummary();
 };
+
+/**
+ * Troca a visualização entre a tela de login e o main-app
+ * @param {boolean} showApp - Um booleano que indica o que deve estar ativo na tela
+ * @returns {void}
+ */
+function toggleScreens(showApp){
+  if (showApp) {
+    LOGIN_SCREEN.classList.remove("active");
+    LOGIN_SCREEN.classList.add("hidden");
+    MAIN_APP.classList.remove("hidden");
+    MAIN_APP.classList.add("active");
+  } else {
+    LOGIN_SCREEN.classList.add("active");
+    LOGIN_SCREEN.classList.remove("hidden");
+    MAIN_APP.classList.add("hidden");
+    MAIN_APP.classList.remove("active");
+  }
+};
+
+// ---
+// FUNÇÕES DE GERENCIAMENTO DE LOGIN
+// ---
+/** * Envia credenciais para o backend, obtém o token e inicializa o app.
+ * @param {string} username
+ * @param {string} password
+ */
+async function handleLogin(username, password) {
+    LOGIN_ERROR_ELEMENT.textContent = "";
+
+    try {
+      console.log("Origin:", window.location.origin);
+      const response = await fetch(TOKEN_OBTAIN_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+          const errorMessage = data.detail || "Credenciais inválidas.";
+          LOGIN_ERROR_ELEMENT.textContent = errorMessage;
+          API_TOKEN = null;
+          return;
+      }
+
+      API_TOKEN = data.access;
+      localStorage.setItem('jwt_token', API_TOKEN);
+      
+      toggleScreens(true);
+      await initAppData();
+
+    } catch (error) {
+        console.error("NETWORK ERROR/SERVER:", error);
+        LOGIN_ERROR_ELEMENT.textContent = "Failed to connect to server.";
+    }
+}
 
 // ---
 // FUNÇÕES DE MANIPULAÇÃO DE TRANSAÇÕES
@@ -188,19 +309,41 @@ function addTransaction(description, amount, type, date) {
 }
 
 /**
- * Remove uma transação do array global e re-renderiza a lista e o saldo.
- * @param {number} id - O ID da transação a ser excluída.
- * @returns {void}
+ * Remove uma transação da API e do estado global.
+ * @param {string} id - O ID (PK) da transação a ser excluída (UUID ou int).
+ * @returns {Promise<void>}
  */
-const deleteTransaction = (id) => {
-  transactions = transactions.filter((transaction) => transaction.id !== id);
+const deleteTransaction = async (id) => {
+  if (!API_TOKEN) {
+      alert("Sessão expirada. Faça login novamente.");
+      return;
+  }
 
-  saveTransactions();
+  try {
+    const response = await fetch(`${BASE_URL}transactions/${id}/`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+    });
 
-  renderTransactions();
+    if (response.status === 200) {
+      console.log(`Transação ${id} deletada com sucesso.`);
+      transactions = transactions.filter((transaction) => String(transaction.id) !== id);
+          
+      renderTransactions(); 
+          
+      updateBalance(); 
 
-  updateBalance();
-};
+    } else if (response.status === 404) {
+      alert("A transação não existe ou você não tem permissão para excluí-la.");
+    } else {
+      throw new Error(`Falha ao deletar: ${response.status}`);
+    }
+
+  } catch (error) {
+      console.error("Erro ao deletar transação:", error);
+      alert("Falha crítica ao deletar transação.");
+  }
+}
 
 /**
  * Função para ordenar transações com base na opção selecionada.
@@ -280,7 +423,7 @@ function createTransactionElement(transaction) {
         <div class="transaction-content">
             <span class="description">${transaction.description}</span>
             <span class="details">
-                <br> ID: ${transaction.id} <br >Tipo: ${typeText} <br> Data: ${formattedDate}
+                <br>Tipo: ${typeText} <br> Data: ${formattedDate}
             </span>
         </div>
         
@@ -353,6 +496,53 @@ const clearAllErrors = () => {
   clearError("error-date");
 };
 
+/**
+ * Salva uma nova transação na API via POST.
+ * * Se bem-sucedido (201), atualiza a lista e o saldo.
+ * Se houver erro de validação (400), exibe as mensagens de erro retornadas pelo backend.
+ * * @param {object} transactionData - Dados da transação (description, amount, type, date).
+ * @returns {Promise<void>}
+ */
+async function saveNewTransaction(transactionData) {
+  if (!API_TOKEN) {
+    alert("Sessão expirada. Faça login novamente.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/transactions/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(transactionData)
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      if (response.status === 400) {
+        for (const [field, errors] of Object.entries(responseData)) {
+          displayError(`error-${field}`, errors.join(' ')); 
+        }
+        return false; 
+      }
+      throw new Error(`Falha ao salvar: ${response.status} - ${JSON.stringify(responseData)}`);
+    }
+      
+    transactions.unshift(responseData);
+      
+    renderTransactions(); 
+    updateBalance();
+      
+    console.log("Nova transação salva com sucesso.", responseData);
+    return true;
+
+  } catch (error) {
+    console.error("Erro ao salvar transação:", error);
+    alert("Erro crítico ao salvar transação. Verifique o console.");
+    return false;
+  }
+}
+
 // ---
 // MANIPULADORES DE EVENTOS (LISTENERS)
 // ---
@@ -405,7 +595,7 @@ SORT_SELECT.addEventListener("change", (e) => {
  * @param {Event} e - O objeto do evento de submissão do formulário.
  * @returns {void}
  */
-TRANSACTIONS_FORM.addEventListener("submit", (e) => {
+TRANSACTIONS_FORM.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   clearAllErrors();
@@ -422,6 +612,7 @@ TRANSACTIONS_FORM.addEventListener("submit", (e) => {
 
   let hasErrors = false;
 
+  const amount = parseFloat(amountString);
   if (description === "") {
     displayError("error-description", "A descrição não pode estar vazia.");
     hasErrors = true;
@@ -432,7 +623,6 @@ TRANSACTIONS_FORM.addEventListener("submit", (e) => {
     hasErrors = true;
   }
 
-  const amount = parseFloat(amountString);
   if (isNaN(amount) || amount <= 0) {
     displayError(
       "error-amount",
@@ -456,19 +646,26 @@ TRANSACTIONS_FORM.addEventListener("submit", (e) => {
   console.log(`Tipo: ${type}`);
   console.log(`Data: ${date}`);
 
-  const finalAmount = parseFloat(amountString);
+  const transactionData = {
+    description: description,
+    amount: amount,
+    type: type,
+    date: date,
+  };
 
-  addTransaction(description, finalAmount, type, date);
+  const success = await saveNewTransaction(transactionData);
 
-  descriptionInput.value = "";
-  amountInput.value = "";
-  dateInput.value = "";
+  if(success){
+    descriptionInput.value = "";
+    amountInput.value = "";
+    dateInput.value = "";
 
-  if (typeInput) {
-    typeInput.checked = false;
+    if (typeInput) {
+      typeInput.checked = false;
+    }
   }
 
-  console.log("Nova transação adicionada");
+  console.log("Tentativa de adicionar transação a API");
 });
 
 /**
@@ -483,10 +680,26 @@ TRANSACTIONS_LIST.addEventListener("click", (e) => {
     const confirmed = confirm("Tem certeza que deseja excluir esta transação?");
 
     if (confirmed) {
-      const idToDelete = parseInt(deleteButton.getAttribute("data-id"));
+      const idToDelete = deleteButton.getAttribute("data-id");
       deleteTransaction(idToDelete);
     }
   }
+});
+
+LOGIN_FORM.addEventListener("submit", (e) =>{
+  e.preventDefault();
+  const username = document.getElementById("login-username").value.trim();
+  const password = document.getElementById("login-password").value.trim();
+  handleLogin(username, password)
+});
+
+LOGOUT_BUTTON.addEventListener("click", () => {
+  API_TOKEN = null;
+  localStorage.removeItem("jwt_token");
+  toggleScreens(false);
+  transactions = [];
+  TRANSACTIONS_LIST.innerHTML = "";
+  BALANCE_ELEMENT.textContent = "R$ 0,00";
 });
 
 // ---
@@ -494,20 +707,31 @@ TRANSACTIONS_LIST.addEventListener("click", (e) => {
 // ---
 
 /**
+ * Função para atualizar dados após o login
+ */
+async function initAppData() {
+  await fetchTransactions();
+  await updateBalance();
+}
+
+/**
  * Função de inicialização da aplicação. A "main"
  */
 function init() {
-  const savedTransactions = loadTransactions();
-  if (savedTransactions) {
-    transactions = savedTransactions;
-  }
-
   const savedTheme = loadTheme();
   if (savedTheme) {
     document.body.setAttribute("data-theme", savedTheme);
   }
 
-  renderTransactions();
+  const storedToken = localStorage.getItem('jwt_token');
+
+  if(storedToken){
+    API_TOKEN = storedToken;
+    toggleScreens(true);
+    initAppData();
+  } else {
+    toggleScreens(false);
+  }
 
   updateBalance();
 }

@@ -53,6 +53,26 @@ header {
     margin: 20px auto;
 }
 
+.hidden {
+    display: none !important;
+}
+
+.screen {
+    width: 90%;
+    max-width: 450px;
+    margin: 20px auto;
+    display: block;
+    transition: opacity 0.3s ease;
+}
+
+.screen-hidden {
+    display: none;
+}
+
+#main-app.screen {
+    padding-bottom: 50px;
+}
+
 .columns-wrapper {
     display: block; 
 }
@@ -71,6 +91,66 @@ header {
 .summary-balance {
     padding: 20px;
 }
+
+/**************************************/
+/* ESTILOS DA TELA DE LOGIN       */
+/**************************************/
+
+#login-screen {
+    text-align: center;
+}
+
+.login-container {
+    background: var(--card-background);
+    box-shadow: 0 4px 8px var(--shadow-color);
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 350px;
+    margin: 50px auto;
+}
+
+.login-container h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+#login-form .form-field {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+#login-form input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#login-form .btn {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 15px;
+    transition: background-color 0.3s;
+}
+
+#login-form .btn:hover {
+    background-color: #555;
+}
+
+#login-error {
+    color: var(--border-color-minus);
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
+
 
 /**************************************/
 /* COMPONENTES E INPUTS            */
@@ -185,6 +265,10 @@ header {
         max-width: 1000px;
     }
 
+    .screen {
+        max-width: 1000px;
+    }
+    
     .columns-wrapper {
         display: flex; 
         gap: 30px; 
